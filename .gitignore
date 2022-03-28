@@ -2,3 +2,6 @@
 .idea
 
 ./dev
+
+./.data
+./data
