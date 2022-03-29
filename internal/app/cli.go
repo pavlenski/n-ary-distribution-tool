@@ -3,9 +3,11 @@ package app
 import (
 	"bufio"
 	"fmt"
+	"github.com/pavlenski/n-ary-distribution-tool/internal/input"
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 const (
@@ -17,16 +19,16 @@ const (
 )
 
 const (
-	input    = "input"
-	cruncher = "cruncher"
-	output   = "output"
+	fileInput = "input"
+	cruncher  = "cruncher"
+	output    = "output"
 )
 
 func (a *App) run() {
-	indent()
 	buffer := bufio.NewReader(os.Stdin)
 
 	for {
+		indent()
 		line, err := buffer.ReadString('\n')
 		if err != nil {
 			log.Fatalln("error scanning command.. exiting.")
@@ -34,8 +36,6 @@ func (a *App) run() {
 
 		args := extractArgs(line)
 		command := args[0]
-
-		_ = command
 
 		switch command {
 		case add:
@@ -65,9 +65,16 @@ func extractArgs(line string) []string {
 
 func (a *App) handleAddCommand(component string, args []string) {
 	switch component {
-	case input:
+	case fileInput:
 		fmt.Printf("adding %s component with args %v\n", component, args)
+		dur, _ := time.ParseDuration(args[1])
+		i := input.NewFileInput(args[0], dur)
+		go i.Run()
+
 	default:
-		fmt.Printf("'%s' is an invalid component type.. use one of [%s | %s | %s]\n", component, input, cruncher, output)
+		fmt.Printf(
+			"'%s' is an invalid component type.. use one of [%s | %s | %s]\n",
+			component, fileInput, cruncher, output,
+		)
 	}
 }
