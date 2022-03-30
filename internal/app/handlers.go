@@ -9,7 +9,7 @@ import (
 func (a *App) handleAddCommand(component string, args []string) {
 	switch component {
 	case fileInput:
-		// TODO clean up so errors can be caught
+		// TODO this will be extracted from the configuration
 		dur, _ := time.ParseDuration(args[1])
 		_, exists := a.inputHandlers[args[0]]
 		if exists {
