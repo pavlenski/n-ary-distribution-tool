@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
 )
 
 const (
@@ -16,6 +15,10 @@ const (
 	remove = "remove"
 	status = "status"
 	exit   = "exit"
+
+	pause  = "pause"
+	resume = "resume"
+	stop   = "stop"
 )
 
 const (
@@ -44,6 +47,12 @@ func (a *App) run() {
 			fmt.Println("linking", args[1:])
 		case remove:
 			fmt.Println("removing", args[1:])
+		case pause:
+			a.handleInputStateCommand(args[1], input.Paused)
+		case resume:
+			a.handleInputStateCommand(args[1], input.Working)
+		case stop:
+			a.handleInputStateCommand(args[1], input.Stopped)
 		case status:
 			fmt.Println("printing status")
 		case exit:
@@ -61,20 +70,4 @@ func indent() {
 
 func extractArgs(line string) []string {
 	return strings.Split(line[:len(line)-1], " ")
-}
-
-func (a *App) handleAddCommand(component string, args []string) {
-	switch component {
-	case fileInput:
-		fmt.Printf("adding %s component with args %v\n", component, args)
-		dur, _ := time.ParseDuration(args[1])
-		i := input.NewFileInput(args[0], dur)
-		go i.Run()
-
-	default:
-		fmt.Printf(
-			"'%s' is an invalid component type.. use one of [%s | %s | %s]\n",
-			component, fileInput, cruncher, output,
-		)
-	}
 }

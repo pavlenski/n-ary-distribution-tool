@@ -1,6 +1,9 @@
 package app
 
-import "time"
+import (
+	"github.com/pavlenski/n-ary-distribution-tool/internal/input"
+	"time"
+)
 
 type config struct {
 	FileInputSleepTime time.Duration
@@ -10,10 +13,11 @@ type config struct {
 }
 
 type App struct {
+	inputHandlers map[string]*input.FileInput
 }
 
 func NewApp() *App {
-	return &App{}
+	return &App{inputHandlers: make(map[string]*input.FileInput)}
 }
 
 func (a *App) Start() {
