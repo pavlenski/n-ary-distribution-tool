@@ -16,9 +16,9 @@ const (
 	status = "status"
 	exit   = "exit"
 
-	pause  = "pause"
-	resume = "resume"
-	stop   = "stop"
+	pause = "pause"
+	start = "start"
+	stop  = "stop"
 )
 
 const (
@@ -49,8 +49,8 @@ func (a *App) run() {
 			fmt.Println("removing", args[1:])
 		case pause:
 			a.handleInputStateCommand(args[1], input.Paused)
-		case resume:
-			a.handleInputStateCommand(args[1], input.Working)
+		case start:
+			a.handleInputStateCommand(args[1], input.Started)
 		case stop:
 			a.handleInputStateCommand(args[1], input.Stopped)
 		case status:

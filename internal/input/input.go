@@ -10,7 +10,7 @@ import (
 type State = int
 
 const (
-	Working State = 1
+	Started State = 1
 	Paused  State = 2
 	Stopped State = 0
 )
@@ -36,7 +36,7 @@ type FileInput struct {
 func NewFileInput(name string, sleepDur time.Duration) *FileInput {
 	return &FileInput{
 		Name:      name,
-		state:     Working,
+		state:     Paused,
 		sleepDur:  sleepDur,
 		runChan:   make(chan State),
 		sleepChan: make(chan struct{}, 1),
@@ -51,7 +51,7 @@ func (i *FileInput) Run() {
 			// this could be set inside the switch cases so it doesn't shut down the snooze method everytime
 			i.stopSnooze() // this informs the sleep routine to shut down. any instruction should reset it.
 			switch i.state {
-			case Working:
+			case Started:
 				fmt.Printf("input [%s] now working\n", i.Name)
 			case Paused:
 				fmt.Printf("input [%s] now paused\n", i.Name)
@@ -94,7 +94,7 @@ func (i *FileInput) snooze() {
 		break
 	case <-time.Tick(i.sleepDur):
 		fmt.Printf("hey input [%s] wake up!\n", i.Name)
-		i.setState(Working)
+		i.setState(Started)
 		break
 	}
 	i.sleeping = false

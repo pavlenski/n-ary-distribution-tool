@@ -17,9 +17,13 @@ func main() {
 	// log2arity - sorting the words to check the key (using O(log2n) sort)
 	// arity^2 - contains
 
-	times, _ := time.ParseDuration("5000ms")
-	time.Sleep(times)
-	fmt.Printf("wtf")
+	ch := make(chan struct{}, 1)
+	ch <- struct{}{}
+	fmt.Printf("len ch %d\n", len(ch))
+
+	//times, _ := time.ParseDuration("5000ms")
+	//time.Sleep(times)
+	//fmt.Printf("wtf")
 
 	//
 	//fmt.Println("beginning state:", State)
