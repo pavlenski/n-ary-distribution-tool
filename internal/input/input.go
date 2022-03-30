@@ -21,10 +21,16 @@ type FileInput struct {
 	state     State
 	stateLock sync.Mutex
 
+	// possibly change this to a channel to avoid multiple instances of crawl functions to happen
+	working  bool
+	sleeping bool
+
 	sleepDur time.Duration
 
-	runChan   <-chan State
+	runChan   chan State
 	sleepChan chan struct{}
+
+	wg sync.WaitGroup
 }
 
 func NewFileInput(name string, sleepDur time.Duration) *FileInput {
@@ -32,8 +38,8 @@ func NewFileInput(name string, sleepDur time.Duration) *FileInput {
 		Name:      name,
 		state:     Working,
 		sleepDur:  sleepDur,
-		runChan:   make(<-chan State),
-		sleepChan: make(chan struct{}),
+		runChan:   make(chan State),
+		sleepChan: make(chan struct{}, 1),
 	}
 }
 
@@ -42,17 +48,21 @@ func (i *FileInput) Run() {
 		select {
 		case state := <-i.runChan:
 			i.setState(state)
-			i.sleepChan <- struct{}{} // this informs the sleep routine to shut down. any instruction should reset it.
+			// this could be set inside the switch cases so it doesn't shut down the snooze method everytime
+			i.stopSnooze() // this informs the sleep routine to shut down. any instruction should reset it.
 			switch i.state {
 			case Working:
-				fmt.Printf("input [%s] now working", i.Name)
+				fmt.Printf("input [%s] now working\n", i.Name)
 			case Paused:
-				fmt.Printf("input [%s] now paused", i.Name)
+				fmt.Printf("input [%s] now paused\n", i.Name)
 			case Stopped:
 				fmt.Printf("input [%s] stopping..\n", i.Name)
+				i.wg.Wait()
 				// wait group or channel to await the job to finish
 				fmt.Printf("input [%s] now stopped\n", i.Name)
 				return
+			default:
+				fmt.Printf("invalid state sent for input [%s]\n", i.Name)
 			}
 		default:
 			runtime.Gosched()
@@ -60,12 +70,16 @@ func (i *FileInput) Run() {
 				break
 			}
 
-			// init job
-
 			// the idea for now is to init a job here, and when that job finishes
 			// it will call the snooze function to pause the file input component for the configured amount
 			// of course, if a state instruction comes from the cli, it will interrupt the snooze
 			// and shut it down
+			if i.working {
+				break
+			}
+			// adding one for the crawling and one for the snooze func
+			i.wg.Add(2)
+			i.checkDisk()
 		}
 	}
 }
@@ -73,13 +87,18 @@ func (i *FileInput) Run() {
 // sleep will 'wake up' or unpause the file input component after configured time...
 // though, if it gets informed (through the sleep channel) that it should cancel out, it does so.
 func (i *FileInput) snooze() {
+	i.sleeping = true
 	select {
 	case <-i.sleepChan:
-		return
+		fmt.Printf("stopping input [%s] snooze func\n", i.Name)
+		break
 	case <-time.Tick(i.sleepDur):
 		fmt.Printf("hey input [%s] wake up!\n", i.Name)
 		i.setState(Working)
+		break
 	}
+	i.sleeping = false
+	i.wg.Done()
 }
 
 func (i *FileInput) setState(state State) {
@@ -90,4 +109,15 @@ func (i *FileInput) setState(state State) {
 
 func (i *FileInput) GetState() State {
 	return i.state
+}
+
+func (i *FileInput) SendState(state State) {
+	i.runChan <- state
+}
+
+func (i *FileInput) stopSnooze() {
+	// if the component is asleep or stopped the snooze func should be shut down
+	if i.sleeping || (i.state == Stopped) {
+		i.sleepChan <- struct{}{}
+	}
 }
