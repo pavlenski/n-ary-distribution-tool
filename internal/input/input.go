@@ -16,21 +16,15 @@ const (
 )
 
 type FileInput struct {
-	Name string
-
+	Name      string
 	state     State
 	stateLock sync.Mutex
-
-	// possibly change this to a channel to avoid multiple instances of crawl functions to happen
-	working  bool
-	sleeping bool
-
-	sleepDur time.Duration
-
+	working   bool
+	sleeping  bool
+	sleepDur  time.Duration
 	runChan   chan State
 	sleepChan chan struct{}
-
-	wg sync.WaitGroup
+	wg        sync.WaitGroup
 }
 
 func NewFileInput(name string, sleepDur time.Duration) *FileInput {
@@ -38,7 +32,7 @@ func NewFileInput(name string, sleepDur time.Duration) *FileInput {
 		Name:      name,
 		state:     Paused,
 		sleepDur:  sleepDur,
-		runChan:   make(chan State),
+		runChan:   make(chan State, 1),
 		sleepChan: make(chan struct{}, 1),
 	}
 }
@@ -66,7 +60,7 @@ func (i *FileInput) Run() {
 			}
 		default:
 			runtime.Gosched()
-			if i.state == Paused {
+			if i.state == Paused || i.state == Stopped {
 				break
 			}
 
@@ -112,6 +106,10 @@ func (i *FileInput) GetState() State {
 }
 
 func (i *FileInput) SendState(state State) {
+	// if the channel is already full or the component is stopped, return so no deadlock appears
+	if len(i.runChan) > 0 || i.state == Stopped {
+		return
+	}
 	i.runChan <- state
 }
 

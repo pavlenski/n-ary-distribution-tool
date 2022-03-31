@@ -12,7 +12,7 @@ func (i *FileInput) checkDisk() {
 }
 
 func (i *FileInput) crawl() {
-	time.Sleep(3 * time.Second)
+	time.Sleep(10 * time.Second)
 	fmt.Printf("input [%s] finished working\n", i.Name)
 
 	// in case the file input component got paused during its work
@@ -20,8 +20,8 @@ func (i *FileInput) crawl() {
 	if i.state != Paused {
 		i.setState(Paused)
 		go i.snooze()
-		// if the component is paused, we will instantly cancel the wait for the snooze func
 	} else {
+		// if the component is paused, we will instantly cancel the wait for the snooze func
 		i.wg.Done()
 	}
 
