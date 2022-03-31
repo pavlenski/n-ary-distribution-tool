@@ -6,6 +6,7 @@ import (
 	"github.com/pavlenski/n-ary-distribution-tool/internal/input"
 	"log"
 	"os"
+	"runtime"
 	"strings"
 )
 
@@ -19,6 +20,9 @@ const (
 	pause = "pause"
 	start = "start"
 	stop  = "stop"
+
+	memory   = "mem"
+	megabyte = 1000000
 )
 
 const (
@@ -55,6 +59,8 @@ func (a *App) run() {
 			a.handleInputStateCommand(args[1], input.Stopped)
 		case status:
 			fmt.Println("printing status")
+		case memory:
+			mem()
 		case exit:
 			fmt.Println("exiting")
 			// send stop signals and stuff
@@ -62,6 +68,17 @@ func (a *App) run() {
 		}
 
 	}
+}
+
+func mem() {
+	ms := &runtime.MemStats{}
+	runtime.ReadMemStats(ms)
+	fmt.Printf(
+		"HEAPALLOC: %fMB\nALLOC: %fMB\nSYS: %fMB\n",
+		float64(ms.HeapAlloc)/megabyte,
+		float64(ms.Alloc)/megabyte,
+		float64(ms.Sys)/megabyte,
+	)
 }
 
 func indent() {
