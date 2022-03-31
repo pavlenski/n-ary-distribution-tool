@@ -50,19 +50,16 @@ func (a *App) run() {
 		case link:
 			fmt.Println("linking", args[1:])
 		case remove:
-			fmt.Println("removing", args[1:])
+			a.handleRemoveCommand(args[1])
 		case pause:
 			a.handleInputStateCommand(args[1], input.Paused)
 		case start:
 			a.handleInputStateCommand(args[1], input.Started)
-		case stop:
-			a.handleInputStateCommand(args[1], input.Stopped)
 		case status:
 			fmt.Println("printing status")
 		case memory:
 			mem()
 		case exit:
-			fmt.Println("exiting")
 			// send stop signals and stuff
 			return
 		}

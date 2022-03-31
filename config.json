@@ -1,0 +1,6 @@
+{
+  "file_input_sleep_time": 5000,
+  "discs": "./data/disk1/;./data/disk2/",
+  "counter_data_limit": 10000000,
+  "sort_progress_limit": 10000
+}
