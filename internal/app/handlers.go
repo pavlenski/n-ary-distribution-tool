@@ -30,7 +30,7 @@ func (a *App) handleRemoveCommand(component string) {
 }
 
 func (a *App) handleInputStateCommand(inputName string, state input.State) {
-	i, ok := a.inputHandlers[inputName]
+	i, ok := a.inputComponents[inputName]
 	if !ok {
 		fmt.Printf("input [%s] does not exist\n", inputName)
 		return
@@ -39,13 +39,13 @@ func (a *App) handleInputStateCommand(inputName string, state input.State) {
 }
 
 func (a *App) addFileInput(name string) {
-	_, exists := a.inputHandlers[name]
+	_, exists := a.inputComponents[name]
 	if exists {
 		fmt.Printf("input with name [%s] already exists", name)
 	}
 
 	i := input.NewFileInput(name, a.fileInputSleepTime)
-	a.inputHandlers[i.Name] = i
+	a.inputComponents[i.Name] = i
 	fmt.Printf("adding input [%s]\n", name)
 	go i.Run()
 }

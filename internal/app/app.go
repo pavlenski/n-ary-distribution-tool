@@ -26,13 +26,14 @@ type App struct {
 	counterDataLimit   uint64
 	sortProgressLimit  uint64
 
-	inputHandlers map[string]*input.FileInput
+	inputComponents map[string]*input.FileInput
+	inputDoneChan   chan string
 }
 
 func NewApp() *App {
 	return &App{
-		inputHandlers: make(map[string]*input.FileInput),
-		discs:         make(map[int]string),
+		inputComponents: make(map[string]*input.FileInput),
+		discs:           make(map[int]string),
 	}
 }
 

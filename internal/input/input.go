@@ -24,6 +24,7 @@ type FileInput struct {
 	sleepDur  time.Duration
 	runChan   chan State
 	sleepChan chan struct{}
+	doneChan  chan struct{}
 	wg        sync.WaitGroup
 }
 
@@ -34,6 +35,7 @@ func NewFileInput(name string, sleepDur time.Duration) *FileInput {
 		sleepDur:  sleepDur,
 		runChan:   make(chan State, 1),
 		sleepChan: make(chan struct{}, 1),
+		doneChan:  make(chan struct{}, 1),
 	}
 }
 
@@ -54,6 +56,7 @@ func (i *FileInput) Run() {
 				i.wg.Wait()
 				// wait group or channel to await the job to finish
 				fmt.Printf("input [%s] now stopped\n", i.Name)
+				i.doneChan <- struct{}{}
 				return
 			default:
 				fmt.Printf("invalid state sent for input [%s]\n", i.Name)
@@ -118,4 +121,10 @@ func (i *FileInput) stopSnooze() {
 	if i.sleeping || (i.state == Stopped) {
 		i.sleepChan <- struct{}{}
 	}
+}
+
+func (i *FileInput) ShutDown(wg *sync.WaitGroup) {
+	defer wg.Done()
+	i.SendState(Stopped)
+	<-i.doneChan
 }

@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"sync"
 )
 
 const (
@@ -19,7 +20,6 @@ const (
 
 	pause = "pause"
 	start = "start"
-	stop  = "stop"
 
 	memory   = "mem"
 	megabyte = 1000000
@@ -60,7 +60,13 @@ func (a *App) run() {
 		case memory:
 			mem()
 		case exit:
-			// send stop signals and stuff
+			inputWg := &sync.WaitGroup{}
+			for _, fi := range a.inputComponents {
+				inputWg.Add(1)
+				go fi.ShutDown(inputWg)
+			}
+			inputWg.Wait()
+
 			return
 		}
 
