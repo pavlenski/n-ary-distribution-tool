@@ -26,6 +26,7 @@ type App struct {
 	counterDataLimit   uint64
 	sortProgressLimit  uint64
 
+	inputPool       map[string]chan struct{}
 	inputComponents map[string]*input.FileInput
 	inputDoneChan   chan string
 }
@@ -34,6 +35,7 @@ func NewApp() *App {
 	return &App{
 		inputComponents: make(map[string]*input.FileInput),
 		discs:           make(map[int]string),
+		inputPool:       make(map[string]chan struct{}),
 	}
 }
 
@@ -60,10 +62,12 @@ func (a *App) loadConfig() {
 	a.configure(cfg)
 }
 
+// configure sets up all app variables
 func (a *App) configure(cfg *config) {
 	ds := strings.Split(cfg.Discs, ";")
 	for i, d := range ds {
 		a.discs[i+1] = d
+		a.inputPool[d] = make(chan struct{}, 1)
 	}
 	st, err := time.ParseDuration(fmt.Sprintf("%dms", cfg.FileInputSleepTime))
 	if err != nil {
