@@ -37,7 +37,6 @@ func (a *App) run() {
 	buffer := bufio.NewReader(os.Stdin)
 
 	for {
-		indent()
 		line, err := buffer.ReadString('\n')
 		if err != nil {
 			log.Fatalln("error scanning command.. exiting.")
@@ -47,6 +46,7 @@ func (a *App) run() {
 		command := args[0]
 
 		switch command {
+		case "temp":
 		case add:
 			if len(args) < 4 {
 				fmt.Printf("not enoguh args, try again..\n")
@@ -75,10 +75,14 @@ func (a *App) run() {
 			mem()
 		case exit:
 			inputWg := &sync.WaitGroup{}
+			// shut down input components (prevent job creation)
 			for _, fi := range a.inputComponents {
 				inputWg.Add(1)
-				go fi.ShutDown(inputWg)
+				go fi.ShutDownGracefully(inputWg)
 			}
+			// shut down file loader (wait for the loading to finish, then exit)
+			inputWg.Add(1)
+			go a.fileLoader.ShutDownGracefully(inputWg)
 			inputWg.Wait()
 
 			return
@@ -96,10 +100,6 @@ func mem() {
 		float64(ms.Alloc)/megabyte,
 		float64(ms.Sys)/megabyte,
 	)
-}
-
-func indent() {
-	fmt.Printf("cli: ")
 }
 
 func extractArgs(line string) []string {

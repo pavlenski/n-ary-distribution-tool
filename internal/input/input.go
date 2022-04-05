@@ -3,6 +3,7 @@ package input
 import (
 	"fmt"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 )
@@ -23,19 +24,16 @@ type FileInput struct {
 
 	state     State
 	stateLock sync.Mutex
-	working   bool
 	sleeping  bool
 	sleepDur  time.Duration
 
 	runChan   chan State
 	sleepChan chan struct{}
-	doneChan  chan struct{}
-	// this ought to be changed from a struct{}
-	poolChan chan struct{}
-	wg       sync.WaitGroup
+	jobChan   chan *job
+	wg        *sync.WaitGroup
 }
 
-func NewFileInput(name, disc string, pool chan struct{}, sleepDur time.Duration) *FileInput {
+func NewFileInput(name, disc string, pool chan *job, sleepDur time.Duration) *FileInput {
 	return &FileInput{
 		Name:             name,
 		disc:             disc,
@@ -44,8 +42,8 @@ func NewFileInput(name, disc string, pool chan struct{}, sleepDur time.Duration)
 		sleepDur:         sleepDur,
 		runChan:          make(chan State, 1),
 		sleepChan:        make(chan struct{}, 1),
-		doneChan:         make(chan struct{}, 1),
-		poolChan:         pool,
+		jobChan:          pool,
+		wg:               &sync.WaitGroup{},
 	}
 }
 
@@ -63,9 +61,6 @@ func (i *FileInput) Run() {
 				fmt.Printf("input [%s] now paused\n", i.Name)
 			case Stopped:
 				fmt.Printf("input [%s] stopping..\n", i.Name)
-				i.wg.Wait()
-				fmt.Printf("input [%s] now stopped\n", i.Name)
-				i.doneChan <- struct{}{}
 				return
 			default:
 				fmt.Printf("invalid state sent for input [%s]\n", i.Name)
@@ -75,18 +70,9 @@ func (i *FileInput) Run() {
 			if i.state == Paused || i.state == Stopped {
 				break
 			}
-			if i.working {
-				break
-			}
-
-			// the idea for now is to init a job here, and when that job finishes
-			// it will call the snooze function to pause the file input component for the configured amount
-			// of course, if a state instruction comes from the cli, it will interrupt the snooze
-			// and shut it down
-
-			// adding one for the crawling and one for the snooze func
-			i.wg.Add(2)
-			i.checkDisk()
+			// adding one for the snooze func
+			i.wg.Add(1)
+			i.crawl()
 		}
 	}
 }
@@ -97,10 +83,8 @@ func (i *FileInput) snooze() {
 	i.sleeping = true
 	select {
 	case <-i.sleepChan:
-		fmt.Printf("stopping input [%s] snooze func\n", i.Name)
 		break
 	case <-time.Tick(i.sleepDur):
-		fmt.Printf("hey input [%s] wake up!\n", i.Name)
 		i.setState(Started)
 		break
 	}
@@ -136,10 +120,21 @@ func (i *FileInput) RemoveDir(dirPath string) {
 			i.directories[index] = i.directories[dirLen-1]
 			i.directories = i.directories[:dirLen-1]
 			found = true
+			i.clearRecentlyModified(fullPath)
+			break
 		}
 	}
 	if !found {
 		fmt.Printf("directory [%s] in input [%s] does not exist\n", fullPath, i.Name)
+	}
+}
+
+func (i *FileInput) clearRecentlyModified(dirPath string) {
+	for filePath := range i.recentlyModified {
+		fmt.Printf("comparing filepath [%s] dirPath [%s]\n", filePath, dirPath)
+		if strings.HasPrefix(filePath, dirPath) {
+			i.recentlyModified[filePath] = time.Time{}
+		}
 	}
 }
 
@@ -160,10 +155,11 @@ func (i *FileInput) stopSnooze() {
 	}
 }
 
-func (i *FileInput) ShutDown(wg *sync.WaitGroup) {
-	defer wg.Done()
+func (i *FileInput) ShutDownGracefully(cliWg *sync.WaitGroup) {
+	defer cliWg.Done()
 	i.SendState(Stopped)
-	<-i.doneChan
+	i.wg.Wait()
+	fmt.Printf("input [%s] now stopped\n", i.Name)
 }
 
 func (i *FileInput) TempRecently() {

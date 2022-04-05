@@ -26,24 +26,24 @@ type App struct {
 	counterDataLimit   uint64
 	sortProgressLimit  uint64
 
-	inputPool       map[string]chan struct{}
+	fileLoader      *input.FileLoader
 	inputComponents map[string]*input.FileInput
-	inputDoneChan   chan string
 }
 
 func NewApp() *App {
 	return &App{
 		inputComponents: make(map[string]*input.FileInput),
 		discs:           make(map[int]string),
-		inputPool:       make(map[string]chan struct{}),
 	}
 }
 
 func (a *App) Start() {
 	a.loadConfig()
+	a.fileLoader.Run()
 	a.run()
 }
 
+// loadConfig must be called before running the app & the fileLoader's Run() method
 func (a *App) loadConfig() {
 	f, err := os.Open(configPath)
 	if err != nil {
@@ -67,7 +67,6 @@ func (a *App) configure(cfg *config) {
 	ds := strings.Split(cfg.Discs, ";")
 	for i, d := range ds {
 		a.discs[i+1] = d
-		a.inputPool[d] = make(chan struct{}, 1)
 	}
 	st, err := time.ParseDuration(fmt.Sprintf("%dms", cfg.FileInputSleepTime))
 	if err != nil {
@@ -76,4 +75,5 @@ func (a *App) configure(cfg *config) {
 	a.fileInputSleepTime = st
 	a.counterDataLimit = cfg.CounterDataLimit
 	a.sortProgressLimit = cfg.SortProgressLimit
+	a.fileLoader = input.NewFileLoader(ds)
 }

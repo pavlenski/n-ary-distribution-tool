@@ -72,9 +72,8 @@ func (a *App) addFileInput(name string, discIndex int) {
 		fmt.Printf("disk of index [%d] does not exist\n", discIndex)
 		return
 	}
-	i := input.NewFileInput(name, disc, a.inputPool[disc], a.fileInputSleepTime)
+	i := input.NewFileInput(name, disc, a.fileLoader.GetJobChan(disc), a.fileInputSleepTime)
 	a.inputComponents[i.Name] = i
-	fmt.Printf("adding input [%s]\n", name)
 	go i.Run()
 }
 
