@@ -2,6 +2,7 @@ package input
 
 import (
 	"fmt"
+	"github.com/pavlenski/n-ary-distribution-tool/internal/cruncher"
 	"io/fs"
 	"path/filepath"
 	"strings"
@@ -18,7 +19,7 @@ func (i *FileInput) crawl() {
 				return nil
 			}
 			if !i.recentlyModified[path].Before(info.ModTime()) {
-				fmt.Printf("file [%s] was recently modified, skipping\n", path)
+				//fmt.Printf("file [%s] wasn't recently modified, skipping\n", path)
 				return nil
 			}
 			i.recentlyModified[path] = time.Now()
@@ -42,8 +43,13 @@ func (i *FileInput) createJobs(filePaths []string) {
 		if i.state == Paused {
 			break
 		}
+		var crunchers []chan<- *cruncher.Data
+		for _, dataChan := range i.crunchers {
+			crunchers = append(crunchers, dataChan)
+		}
 		j := &job{
-			filePath: filePath,
+			filePath:  filePath,
+			crunchers: crunchers,
 		}
 		i.jobChan <- j
 	}

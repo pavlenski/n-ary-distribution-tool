@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pavlenski/n-ary-distribution-tool/internal/cruncher"
 	"github.com/pavlenski/n-ary-distribution-tool/internal/input"
 	"io/ioutil"
 	"log"
@@ -28,18 +29,21 @@ type App struct {
 
 	fileLoader      *input.FileLoader
 	inputComponents map[string]*input.FileInput
+
+	cruncherComponents map[string]*cruncher.Cruncher
 }
 
 func NewApp() *App {
 	return &App{
-		inputComponents: make(map[string]*input.FileInput),
-		discs:           make(map[int]string),
+		inputComponents:    make(map[string]*input.FileInput),
+		cruncherComponents: make(map[string]*cruncher.Cruncher),
+		discs:              make(map[int]string),
 	}
 }
 
 func (a *App) Start() {
 	fmt.Println("- - - - - n-ary-distribution-tool - - - - -")
-	fmt.Println("- - - - - - p.galantic rn3817 - - - - - - -")
+	fmt.Println("- - - - - - p.galantic rn 38/17 - - - - - -")
 	fmt.Printf("- - - - - - - - - %v - - - - - - - - -\n", time.Now().Format("3:04-PM"))
 	a.loadConfig()
 	a.fileLoader.Run()

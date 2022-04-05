@@ -3,6 +3,7 @@ package app
 import (
 	"bufio"
 	"fmt"
+	"github.com/pavlenski/n-ary-distribution-tool/internal/cruncher"
 	"github.com/pavlenski/n-ary-distribution-tool/internal/input"
 	"log"
 	"os"
@@ -26,15 +27,19 @@ const (
 )
 
 const (
-	fileInput = "input"
-	cruncher  = "cruncher"
-	output    = "output"
+	fileInput    = "input"
+	cruncherComp = "cruncher"
+	output       = "output"
 
 	dir = "dir"
 )
 
 func (a *App) run() {
 	buffer := bufio.NewReader(os.Stdin)
+
+	c := cruncher.NewCruncher("c1", 1)
+	go c.Run()
+	a.cruncherComponents[c.Name] = c
 
 	for {
 		line, err := buffer.ReadString('\n')
@@ -50,6 +55,7 @@ func (a *App) run() {
 		case add:
 			a.handleAddCommand(args[1], args[2:])
 		case link:
+			a.handleLinkCommand(args[1], args[2])
 		case remove:
 			a.handleRemoveCommand(args[1], args[2:])
 		case pause:

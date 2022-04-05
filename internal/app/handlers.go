@@ -25,7 +25,7 @@ func (a *App) handleAddCommand(component string, args []string) {
 	default:
 		fmt.Printf(
 			"'%s' is an invalid component type.. use one of [%s | %s | %s]\n",
-			component, fileInput, cruncher, output,
+			component, fileInput, cruncherComp, output,
 		)
 	}
 }
@@ -46,9 +46,23 @@ func (a *App) handleRemoveCommand(component string, args []string) {
 	default:
 		fmt.Printf(
 			"'%s' is an invalid component type.. use one of [%s | %s | %s]\n",
-			component, fileInput, cruncher, output,
+			component, fileInput, cruncherComp, output,
 		)
 	}
+}
+
+func (a *App) handleLinkCommand(crunch, input string) {
+	c, ok := a.cruncherComponents[crunch]
+	if !ok {
+		fmt.Printf("cruncher [%s] does not exist\n", crunch)
+		return
+	}
+	i, ok := a.inputComponents[input]
+	if !ok {
+		fmt.Printf("input [%s] does not exist\n", input)
+		return
+	}
+	i.LinkCruncher(c)
 }
 
 func (a *App) handleInputStateCommand(inputName string, state input.State) {

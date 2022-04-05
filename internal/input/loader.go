@@ -2,13 +2,15 @@ package input
 
 import (
 	"fmt"
+	"github.com/pavlenski/n-ary-distribution-tool/internal/cruncher"
 	"io/ioutil"
+	"strings"
 	"sync"
 )
 
 type job struct {
-	filePath string
-	// cruncher []*cruncher.Cruncher
+	filePath  string
+	crunchers []chan<- *cruncher.Data
 }
 
 type discPool struct {
@@ -58,7 +60,11 @@ func (l *FileLoader) LoadAndSendFileFromDisc(disc string) {
 				fmt.Println(err)
 				continue
 			}
-
+			fileNameSplit := strings.Split(j.filePath, " ")
+			fileName := fileNameSplit[len(fileNameSplit)-1]
+			for _, c := range j.crunchers {
+				c <- cruncher.NewCruncherData(fileName, &data)
+			}
 			fmt.Printf("loaded file [%s] from disc [%s] size [%dMB]\n", j.filePath, disc, len(data)/1000000)
 		case <-doneChan:
 			l.wg.Done()

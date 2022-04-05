@@ -2,6 +2,7 @@ package input
 
 import (
 	"fmt"
+	"github.com/pavlenski/n-ary-distribution-tool/internal/cruncher"
 	"runtime"
 	"strings"
 	"sync"
@@ -22,6 +23,8 @@ type FileInput struct {
 	directories      []string
 	recentlyModified map[string]time.Time
 
+	crunchers map[string]chan<- *cruncher.Data
+
 	state     State
 	stateLock sync.Mutex
 	sleeping  bool
@@ -38,6 +41,7 @@ func NewFileInput(name, disc string, pool chan *job, sleepDur time.Duration) *Fi
 		Name:             name,
 		disc:             disc,
 		recentlyModified: make(map[string]time.Time),
+		crunchers:        make(map[string]chan<- *cruncher.Data),
 		state:            Paused,
 		sleepDur:         sleepDur,
 		runChan:          make(chan State, 1),
@@ -130,6 +134,15 @@ func (i *FileInput) RemoveDir(dirPath string) {
 	}
 }
 
+func (i *FileInput) LinkCruncher(c *cruncher.Cruncher) {
+	if _, exists := i.crunchers[c.Name]; exists {
+		fmt.Printf("curncher [%s] is already linked\n", c.Name)
+		return
+	}
+	i.crunchers[c.Name] = c.GetDataChan()
+	fmt.Printf("linking cruncher [%s] to input [%s]\n", c.Name, i.Name)
+}
+
 func (i *FileInput) clearRecentlyModified(dirPath string) {
 	for filePath := range i.recentlyModified {
 		fmt.Printf("comparing filepath [%s] dirPath [%s]\n", filePath, dirPath)
@@ -137,10 +150,6 @@ func (i *FileInput) clearRecentlyModified(dirPath string) {
 			i.recentlyModified[filePath] = time.Time{}
 		}
 	}
-}
-
-func (i *FileInput) TempPrintDirs() {
-	fmt.Println(i.directories)
 }
 
 func (i *FileInput) setState(state State) {
@@ -161,8 +170,4 @@ func (i *FileInput) ShutDownGracefully(cliWg *sync.WaitGroup) {
 	i.SendState(Stopped)
 	i.wg.Wait()
 	fmt.Printf("input [%s] now stopped\n", i.Name)
-}
-
-func (i *FileInput) TempRecently() {
-	fmt.Println(i.recentlyModified)
 }
