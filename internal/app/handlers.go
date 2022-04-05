@@ -3,7 +3,6 @@ package app
 import (
 	"fmt"
 	"github.com/pavlenski/n-ary-distribution-tool/internal/input"
-	"os"
 	"strconv"
 )
 
@@ -75,15 +74,4 @@ func (a *App) addFileInput(name string, discIndex int) {
 	i := input.NewFileInput(name, disc, a.fileLoader.GetJobChan(disc), a.fileInputSleepTime)
 	a.inputComponents[i.Name] = i
 	go i.Run()
-}
-
-func dirExists(path string) bool {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true
-	}
-	if os.IsNotExist(err) {
-		return false
-	}
-	return false
 }

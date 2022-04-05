@@ -11,7 +11,6 @@ import (
 // crawl goes through its component's given directories & gathers a group of files which
 // will be sent as jobs (each file) to the fileLoader component
 func (i *FileInput) crawl() {
-	fmt.Printf("input [%s] started working\n", i.Name)
 	var filePaths []string
 	for _, dir := range i.directories {
 		err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {

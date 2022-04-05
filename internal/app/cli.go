@@ -48,22 +48,9 @@ func (a *App) run() {
 		switch command {
 		case "temp":
 		case add:
-			if len(args) < 4 {
-				fmt.Printf("not enoguh args, try again..\n")
-				continue
-			}
 			a.handleAddCommand(args[1], args[2:])
 		case link:
-			// temp
-			for _, fi := range a.inputComponents {
-				//fi.TempPrintDirs()
-				fi.TempRecently()
-			}
 		case remove:
-			if len(args) < 4 {
-				fmt.Printf("not enoguh args, try again..\n")
-				continue
-			}
 			a.handleRemoveCommand(args[1], args[2:])
 		case pause:
 			a.handleInputStateCommand(args[1], input.Paused)

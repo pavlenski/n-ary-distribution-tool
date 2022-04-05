@@ -38,6 +38,9 @@ func NewApp() *App {
 }
 
 func (a *App) Start() {
+	fmt.Println("- - - - - n-ary-distribution-tool - - - - -")
+	fmt.Println("- - - - - - p.galantic rn3817 - - - - - - -")
+	fmt.Printf("- - - - - - - - - %v - - - - - - - - -\n", time.Now().Format("3:04-PM"))
 	a.loadConfig()
 	a.fileLoader.Run()
 	a.run()

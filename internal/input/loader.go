@@ -2,8 +2,8 @@ package input
 
 import (
 	"fmt"
+	"io/ioutil"
 	"sync"
-	"time"
 )
 
 type job struct {
@@ -53,12 +53,19 @@ func (l *FileLoader) LoadAndSendFileFromDisc(disc string) {
 	for {
 		select {
 		case j := <-jobChan:
-			time.Sleep(3 * time.Second)
-			fmt.Printf("loaded file [%s] from disc [%s]\n", j.filePath, disc)
+			data, err := ioutil.ReadFile(j.filePath)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+
+			fmt.Printf("loaded file [%s] from disc [%s] size [%dMB]\n", j.filePath, disc, len(data)/1000000)
 		case <-doneChan:
 			l.wg.Done()
 			fmt.Printf("shutting down disc [%s] file loader\n", disc)
 			break
+			// should add a sleep channel case where no file input component is working on the specific disc..
+			// which means the goroutine for loading files on that disc should be asleep.
 		}
 	}
 }

@@ -109,6 +109,7 @@ func (i *FileInput) AddDir(dirPath string) {
 		}
 	}
 	i.directories = append(i.directories, i.disc+dirPath)
+	fmt.Printf("added dir [%s] to input [%s]\n", fullPath, i.Name)
 }
 
 func (i *FileInput) RemoveDir(dirPath string) {
