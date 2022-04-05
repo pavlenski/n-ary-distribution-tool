@@ -18,7 +18,7 @@ type discPool struct {
 
 type FileLoader struct {
 	pool map[string]*discPool
-	wg   *sync.WaitGroup
+	wg   sync.WaitGroup
 }
 
 func newDiscPool() *discPool {
@@ -35,7 +35,7 @@ func NewFileLoader(discs []string) *FileLoader {
 	}
 	return &FileLoader{
 		pool: m,
-		wg:   &sync.WaitGroup{},
+		wg:   sync.WaitGroup{},
 	}
 }
 

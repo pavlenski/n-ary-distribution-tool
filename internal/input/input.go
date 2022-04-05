@@ -30,7 +30,7 @@ type FileInput struct {
 	runChan   chan State
 	sleepChan chan struct{}
 	jobChan   chan *job
-	wg        *sync.WaitGroup
+	wg        sync.WaitGroup
 }
 
 func NewFileInput(name, disc string, pool chan *job, sleepDur time.Duration) *FileInput {
@@ -43,7 +43,7 @@ func NewFileInput(name, disc string, pool chan *job, sleepDur time.Duration) *Fi
 		runChan:          make(chan State, 1),
 		sleepChan:        make(chan struct{}, 1),
 		jobChan:          pool,
-		wg:               &sync.WaitGroup{},
+		wg:               sync.WaitGroup{},
 	}
 }
 
