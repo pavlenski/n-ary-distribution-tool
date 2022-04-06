@@ -37,7 +37,12 @@ const (
 func (a *App) run() {
 	buffer := bufio.NewReader(os.Stdin)
 
-	c := cruncher.NewCruncher("c1", 1)
+	i1 := input.NewFileInput("i1", a.discs[1], a.fileLoader.GetJobChan(a.discs[1]), a.fileInputSleepTime)
+	go i1.Run()
+	i1.AddDir("A")
+	a.inputComponents[i1.Name] = i1
+
+	c := cruncher.NewCruncher("c1", 1, a.counterDataLimit, a.cruncherCounter.GetJobChan())
 	go c.Run()
 	a.cruncherComponents[c.Name] = c
 
@@ -73,9 +78,17 @@ func (a *App) run() {
 				inputWg.Add(1)
 				go fi.ShutDownGracefully(inputWg)
 			}
+
+			for _, c := range a.cruncherComponents {
+				inputWg.Add(1)
+				go c.ShutDownGracefully(inputWg)
+			}
 			// shut down file loader (wait for the loading to finish, then exit)
 			inputWg.Add(1)
 			go a.fileLoader.ShutDownGracefully(inputWg)
+			inputWg.Add(1)
+			go a.cruncherCounter.ShutDownGracefully(inputWg)
+
 			inputWg.Wait()
 
 			return

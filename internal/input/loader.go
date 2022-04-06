@@ -60,7 +60,7 @@ func (l *FileLoader) LoadAndSendFileFromDisc(disc string) {
 				fmt.Println(err)
 				continue
 			}
-			fileNameSplit := strings.Split(j.filePath, " ")
+			fileNameSplit := strings.Split(j.filePath, "/")
 			fileName := fileNameSplit[len(fileNameSplit)-1]
 			for _, c := range j.crunchers {
 				c <- cruncher.NewCruncherData(fileName, &data)
@@ -68,7 +68,6 @@ func (l *FileLoader) LoadAndSendFileFromDisc(disc string) {
 			fmt.Printf("loaded file [%s] from disc [%s] size [%dMB]\n", j.filePath, disc, len(data)/1000000)
 		case <-doneChan:
 			l.wg.Done()
-			fmt.Printf("shutting down disc [%s] file loader\n", disc)
 			break
 			// should add a sleep channel case where no file input component is working on the specific disc..
 			// which means the goroutine for loading files on that disc should be asleep.
@@ -91,4 +90,5 @@ func (l *FileLoader) ShutDownGracefully(inputWg *sync.WaitGroup) {
 		discPool.doneChan <- struct{}{}
 	}
 	l.wg.Wait()
+	fmt.Printf("disc loader was shut down\n")
 }

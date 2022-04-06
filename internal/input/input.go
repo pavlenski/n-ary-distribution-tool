@@ -145,7 +145,6 @@ func (i *FileInput) LinkCruncher(c *cruncher.Cruncher) {
 
 func (i *FileInput) clearRecentlyModified(dirPath string) {
 	for filePath := range i.recentlyModified {
-		fmt.Printf("comparing filepath [%s] dirPath [%s]\n", filePath, dirPath)
 		if strings.HasPrefix(filePath, dirPath) {
 			i.recentlyModified[filePath] = time.Time{}
 		}
@@ -169,5 +168,5 @@ func (i *FileInput) ShutDownGracefully(cliWg *sync.WaitGroup) {
 	defer cliWg.Done()
 	i.SendState(Stopped)
 	i.wg.Wait()
-	fmt.Printf("input [%s] now stopped\n", i.Name)
+	fmt.Printf("input [%s] stopped\n", i.Name)
 }

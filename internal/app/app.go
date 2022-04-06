@@ -17,19 +17,20 @@ const configPath = "./config.json"
 type config struct {
 	FileInputSleepTime uint64 `json:"file_input_sleep_time,omitempty"`
 	Discs              string `json:"discs,omitempty"`
-	CounterDataLimit   uint64 `json:"counter_data_limit,omitempty"`
-	SortProgressLimit  uint64 `json:"sort_progress_limit,omitempty"`
+	CounterDataLimit   int    `json:"counter_data_limit,omitempty"`
+	SortProgressLimit  int    `json:"sort_progress_limit,omitempty"`
 }
 
 type App struct {
 	discs              map[int]string
 	fileInputSleepTime time.Duration
-	counterDataLimit   uint64
-	sortProgressLimit  uint64
+	counterDataLimit   int
+	sortProgressLimit  int
 
 	fileLoader      *input.FileLoader
 	inputComponents map[string]*input.FileInput
 
+	cruncherCounter    *cruncher.Counter
 	cruncherComponents map[string]*cruncher.Cruncher
 }
 
@@ -47,6 +48,7 @@ func (a *App) Start() {
 	fmt.Printf("- - - - - - - - - %v - - - - - - - - -\n", time.Now().Format("3:04-PM"))
 	a.loadConfig()
 	a.fileLoader.Run()
+	go a.cruncherCounter.Run()
 	a.run()
 }
 
@@ -83,4 +85,5 @@ func (a *App) configure(cfg *config) {
 	a.counterDataLimit = cfg.CounterDataLimit
 	a.sortProgressLimit = cfg.SortProgressLimit
 	a.fileLoader = input.NewFileLoader(ds)
+	a.cruncherCounter = cruncher.NewCounter()
 }
