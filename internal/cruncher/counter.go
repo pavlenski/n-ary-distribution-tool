@@ -2,7 +2,6 @@ package cruncher
 
 import (
 	"fmt"
-	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -23,7 +22,6 @@ type Counter struct {
 	jobChan  chan *job
 	doneChan chan struct{}
 
-	m  []map[string]int
 	wg sync.WaitGroup
 }
 
@@ -98,10 +96,6 @@ loop:
 		}
 	}
 	fmt.Printf("counted file [%s] chunk range[%d-%d] bytes\n", jb.fileName, jb.start, jb.end)
-	c.m = append(c.m, m)
-	fmt.Printf("collector start")
-	runtime.GC()
-	fmt.Printf("collector end")
 	//send output data
 	c.poolChan <- struct{}{}
 }
