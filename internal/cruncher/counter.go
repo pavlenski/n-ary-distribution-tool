@@ -69,7 +69,7 @@ func createPool() chan struct{} {
 
 func (c *Counter) countAndForward(jb *job) {
 	defer c.wg.Done()
-	fmt.Printf("counting file [%s] chunk range [%d-%d] bytes\n", jb.fileName, jb.start, jb.end)
+	//fmt.Printf("counting file [%s] chunk range [%d-%d] bytes\n", jb.fileName, jb.start, jb.end)
 	//fmt.Printf("data-chunk: %s\n", (*jb.fileData)[jb.start:jb.end])
 
 	m := make(map[string]int)

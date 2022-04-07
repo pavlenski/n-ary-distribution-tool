@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -56,6 +57,7 @@ func (a *App) Start() {
 	go a.cruncherCounter.Run()
 	go a.outputCache.Run()
 	time.Sleep(250 * time.Millisecond)
+	go a.trackMemory()
 	a.run()
 }
 
@@ -94,4 +96,19 @@ func (a *App) configure(cfg *config) {
 	a.fileLoader = input.NewFileLoader(ds)
 	a.cruncherCounter = cruncher.NewCounter()
 	a.outputCache = output.NewCache(cfg.SortProgressLimit)
+}
+
+func (a *App) trackMemory() {
+	ms := runtime.MemStats{}
+	for {
+		select {
+		case <-time.Tick(500 * time.Millisecond):
+			runtime.ReadMemStats(&ms)
+			if ms.Alloc > 3*1024*1024*1024 {
+				fmt.Printf("- - MEMORY EXCEEDED - - - - - - \n")
+				fmt.Printf("- - ALLOC MEM: %d - - - - - - - \n", ms.Alloc)
+				os.Exit(1)
+			}
+		}
+	}
 }

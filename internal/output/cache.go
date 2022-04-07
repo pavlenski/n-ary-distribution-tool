@@ -68,7 +68,7 @@ func (c *Cache) Run() {
 				done: false,
 				wg:   i.Wg,
 			}
-			go c.updateWhenDone(c.m[i.FileName].wg, &c.m[i.FileName].done)
+			go c.updateWhenDone(i.FileName, c.m[i.FileName].wg, &c.m[i.FileName].done)
 			fmt.Printf("cache output noted of file [%s]\n", i.FileName)
 		case ju := <-c.jobUnionChan:
 			<-c.poolChan
@@ -79,9 +79,10 @@ func (c *Cache) Run() {
 	}
 }
 
-func (c *Cache) updateWhenDone(wg *sync.WaitGroup, done *bool) {
+func (c *Cache) updateWhenDone(fileName string, wg *sync.WaitGroup, done *bool) {
 	wg.Wait()
 	*done = true
+	fmt.Printf("file [%s] finished mapping\n", fileName)
 }
 
 func (c *Cache) unite(ju *jobUnion) {
@@ -91,7 +92,6 @@ func (c *Cache) unite(ju *jobUnion) {
 		c.m[ju.fileName].bow[k] += v
 		c.mu.Unlock()
 	}
-	fmt.Printf("united file [%s] chunk\n", ju.fileName)
 	c.poolChan <- struct{}{}
 }
 

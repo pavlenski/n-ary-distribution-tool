@@ -48,11 +48,16 @@ func (a *App) run() {
 	//i1.AddDir("B")
 	a.inputComponents[i1.Name] = i1
 
-	c := cruncher.NewCruncher("c1", 1, a.counterDataLimit, a.cruncherCounter.GetJobChan(), a.outputCache.GetInfoChan())
-	go c.Run()
-	a.cruncherComponents[c.Name] = c
+	c1 := cruncher.NewCruncher("c1", 1, a.counterDataLimit, a.cruncherCounter.GetJobChan(), a.outputCache.GetInfoChan())
+	go c1.Run()
+	a.cruncherComponents[c1.Name] = c1
 
-	c.LinkOutput(o1)
+	c2 := cruncher.NewCruncher("c2", 2, a.counterDataLimit, a.cruncherCounter.GetJobChan(), a.outputCache.GetInfoChan())
+	go c2.Run()
+	a.cruncherComponents[c2.Name] = c2
+
+	c1.LinkOutput(o1)
+	c2.LinkOutput(o1)
 
 	for {
 		line, err := buffer.ReadString('\n')
@@ -67,8 +72,8 @@ func (a *App) run() {
 		case "temp":
 			//a.outputCache.TempPrintMaps()
 			//a.outputCache.TempPrintMapNames()
-			//a.outputCache.Take("wiki-1-arity1.txt")
-			a.outputCache.Poll("wiki-1-arity1.txt")
+			a.outputCache.Take("wiki-1-arity1.txt")
+			//a.outputCache.Poll("wiki-1-arity1.txt")
 		case add:
 			a.handleAddCommand(args[1], args[2:])
 		case link:

@@ -5,3 +5,6 @@
 
 ./.data
 ./data
+
+*_test.go
+
