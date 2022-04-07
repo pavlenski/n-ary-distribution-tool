@@ -2,19 +2,21 @@ package cruncher
 
 import (
 	"fmt"
+	"github.com/pavlenski/n-ary-distribution-tool/internal/output"
 	"sort"
 	"strings"
 	"sync"
 )
 
-const counterPoolLimit = 100
+const counterPoolLimit = 10
 
 type job struct {
 	fileName   string
 	fileData   *[]byte
 	start, end int
 	arity      int
-	// outputs []output.Output
+	outputs    []chan<- *output.Data
+	wg         *sync.WaitGroup
 }
 
 type Counter struct {
@@ -95,7 +97,16 @@ loop:
 			}
 		}
 	}
-	fmt.Printf("counted file [%s] chunk range[%d-%d] bytes\n", jb.fileName, jb.start, jb.end)
+
+	d := &output.Data{
+		FileName: jb.fileName,
+		Chunk:    m,
+		FileWg:   jb.wg,
+	}
+	for _, o := range jb.outputs {
+		o <- d
+	}
 	//send output data
+	fmt.Printf("counted file [%s] chunk range[%d-%d] bytes\n", jb.fileName, jb.start, jb.end)
 	c.poolChan <- struct{}{}
 }

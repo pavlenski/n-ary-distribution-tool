@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pavlenski/n-ary-distribution-tool/internal/cruncher"
 	"github.com/pavlenski/n-ary-distribution-tool/internal/input"
+	"github.com/pavlenski/n-ary-distribution-tool/internal/output"
 	"io/ioutil"
 	"log"
 	"os"
@@ -32,12 +33,16 @@ type App struct {
 
 	cruncherCounter    *cruncher.Counter
 	cruncherComponents map[string]*cruncher.Cruncher
+
+	outputCache      *output.Cache
+	outputComponents map[string]*output.Output
 }
 
 func NewApp() *App {
 	return &App{
 		inputComponents:    make(map[string]*input.FileInput),
 		cruncherComponents: make(map[string]*cruncher.Cruncher),
+		outputComponents:   make(map[string]*output.Output),
 		discs:              make(map[int]string),
 	}
 }
@@ -49,6 +54,8 @@ func (a *App) Start() {
 	a.loadConfig()
 	a.fileLoader.Run()
 	go a.cruncherCounter.Run()
+	go a.outputCache.Run()
+	time.Sleep(250 * time.Millisecond)
 	a.run()
 }
 
@@ -86,4 +93,5 @@ func (a *App) configure(cfg *config) {
 	a.sortProgressLimit = cfg.SortProgressLimit
 	a.fileLoader = input.NewFileLoader(ds)
 	a.cruncherCounter = cruncher.NewCounter()
+	a.outputCache = output.NewCache(cfg.SortProgressLimit)
 }

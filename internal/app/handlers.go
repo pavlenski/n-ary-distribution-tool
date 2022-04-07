@@ -25,7 +25,7 @@ func (a *App) handleAddCommand(component string, args []string) {
 	default:
 		fmt.Printf(
 			"'%s' is an invalid component type.. use one of [%s | %s | %s]\n",
-			component, fileInput, cruncherComp, output,
+			component, fileInput, cruncherComp, outputComp,
 		)
 	}
 }
@@ -46,7 +46,7 @@ func (a *App) handleRemoveCommand(component string, args []string) {
 	default:
 		fmt.Printf(
 			"'%s' is an invalid component type.. use one of [%s | %s | %s]\n",
-			component, fileInput, cruncherComp, output,
+			component, fileInput, cruncherComp, outputComp,
 		)
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pavlenski/n-ary-distribution-tool/internal/cruncher"
 	"github.com/pavlenski/n-ary-distribution-tool/internal/input"
+	"github.com/pavlenski/n-ary-distribution-tool/internal/output"
 	"log"
 	"os"
 	"runtime"
@@ -29,7 +30,7 @@ const (
 const (
 	fileInput    = "input"
 	cruncherComp = "cruncher"
-	output       = "output"
+	outputComp   = "output"
 
 	dir = "dir"
 )
@@ -37,14 +38,20 @@ const (
 func (a *App) run() {
 	buffer := bufio.NewReader(os.Stdin)
 
+	o1 := output.NewOutput("main", a.outputCache.GetJobUnionChan())
+	a.outputComponents[o1.Name] = o1
+	go o1.Run()
+
 	i1 := input.NewFileInput("i1", a.discs[1], a.fileLoader.GetJobChan(a.discs[1]), a.fileInputSleepTime)
 	go i1.Run()
-	i1.AddDir("A")
+	i1.AddDir("TEMP")
 	a.inputComponents[i1.Name] = i1
 
-	c := cruncher.NewCruncher("c1", 1, a.counterDataLimit, a.cruncherCounter.GetJobChan())
+	c := cruncher.NewCruncher("c1", 1, a.counterDataLimit, a.cruncherCounter.GetJobChan(), a.outputCache.GetInfoChan())
 	go c.Run()
 	a.cruncherComponents[c.Name] = c
+
+	c.LinkOutput(o1)
 
 	for {
 		line, err := buffer.ReadString('\n')
