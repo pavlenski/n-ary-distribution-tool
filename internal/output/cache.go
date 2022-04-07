@@ -14,11 +14,6 @@ type jobUnion struct {
 	wg       *sync.WaitGroup
 }
 
-type jobSum struct {
-	sumName   string
-	fileNames []string
-}
-
 type file struct {
 	bow  map[string]int
 	done bool
@@ -83,6 +78,26 @@ func (c *Cache) updateWhenDone(fileName string, wg *sync.WaitGroup, done *bool) 
 	wg.Wait()
 	*done = true
 	fmt.Printf("file [%s] finished mapping\n", fileName)
+}
+
+func (c *Cache) Sum(sumName string, fileNames []string) {
+	fmt.Printf("initializing sum for [%s]\n", sumName)
+	sumMap := make(map[string]int)
+	for _, fn := range fileNames {
+		fmt.Printf("waiting for file [%s] to finish mapping..\n", fn)
+		c.m[fn].wg.Wait()
+		c.mu.Lock()
+		for k, v := range c.m[fn].bow {
+			sumMap[k] += v
+		}
+		c.mu.Unlock()
+	}
+	c.m[sumName] = &file{
+		bow:  sumMap,
+		done: true,
+		wg:   &sync.WaitGroup{},
+	}
+	fmt.Printf("sum [%s] complete\n", sumName)
 }
 
 func (c *Cache) unite(ju *jobUnion) {

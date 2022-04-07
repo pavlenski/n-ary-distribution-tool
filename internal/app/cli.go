@@ -69,11 +69,13 @@ func (a *App) run() {
 		command := args[0]
 
 		switch command {
-		case "temp":
-			//a.outputCache.TempPrintMaps()
-			//a.outputCache.TempPrintMapNames()
-			a.outputCache.Take("wiki-1-arity1.txt")
+		case "poll":
 			//a.outputCache.Poll("wiki-1-arity1.txt")
+			a.outputCache.Poll("test-sum")
+		case "take":
+			a.outputCache.Take("wiki-1-arity1.txt")
+		case "temp":
+			a.outputCache.Sum("test-sum", []string{"wiki-1-arity1.txt", "wiki-2-arity1.txt"})
 		case add:
 			a.handleAddCommand(args[1], args[2:])
 		case link:
