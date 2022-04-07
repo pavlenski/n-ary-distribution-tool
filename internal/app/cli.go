@@ -44,7 +44,8 @@ func (a *App) run() {
 
 	i1 := input.NewFileInput("i1", a.discs[1], a.fileLoader.GetJobChan(a.discs[1]), a.fileInputSleepTime)
 	go i1.Run()
-	i1.AddDir("TEMP")
+	i1.AddDir("A")
+	//i1.AddDir("B")
 	a.inputComponents[i1.Name] = i1
 
 	c := cruncher.NewCruncher("c1", 1, a.counterDataLimit, a.cruncherCounter.GetJobChan(), a.outputCache.GetInfoChan())
@@ -64,6 +65,10 @@ func (a *App) run() {
 
 		switch command {
 		case "temp":
+			//a.outputCache.TempPrintMaps()
+			//a.outputCache.TempPrintMapNames()
+			//a.outputCache.Take("wiki-1-arity1.txt")
+			a.outputCache.Poll("wiki-1-arity1.txt")
 		case add:
 			a.handleAddCommand(args[1], args[2:])
 		case link:
@@ -86,6 +91,7 @@ func (a *App) run() {
 				go fi.ShutDownGracefully(inputWg)
 			}
 
+			// shut down cruncher components
 			for _, c := range a.cruncherComponents {
 				inputWg.Add(1)
 				go c.ShutDownGracefully(inputWg)
@@ -93,8 +99,19 @@ func (a *App) run() {
 			// shut down file loader (wait for the loading to finish, then exit)
 			inputWg.Add(1)
 			go a.fileLoader.ShutDownGracefully(inputWg)
+			// shut down cruncher counter
 			inputWg.Add(1)
 			go a.cruncherCounter.ShutDownGracefully(inputWg)
+
+			// shut down output components
+			for _, o := range a.outputComponents {
+				inputWg.Add(1)
+				go o.ShutDownGracefully(inputWg)
+			}
+
+			// shut down output cache
+			inputWg.Add(1)
+			go a.outputCache.ShutDownGracefully(inputWg)
 
 			inputWg.Wait()
 

@@ -84,6 +84,7 @@ loop:
 						cornerWords++
 						if cornerWords == c.arity-1 {
 							end = j
+							cornerWords = 0
 							break
 						}
 					}

@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-const counterPoolLimit = 10
+const counterPoolLimit = 20
 
 type job struct {
 	fileName   string
@@ -70,27 +70,28 @@ func createPool() chan struct{} {
 func (c *Counter) countAndForward(jb *job) {
 	defer c.wg.Done()
 	fmt.Printf("counting file [%s] chunk range [%d-%d] bytes\n", jb.fileName, jb.start, jb.end)
+	//fmt.Printf("data-chunk: %s\n", (*jb.fileData)[jb.start:jb.end])
 
 	m := make(map[string]int)
-	fileDataLen := len(*jb.fileData)
 loop:
-	for i := 0; i < fileDataLen; i++ {
-		if (*jb.fileData)[i] == ' ' || i == 0 {
+	for i := jb.start; i < jb.end; i++ {
+		if (*jb.fileData)[i] == ' ' || i == jb.start {
 			spaces := 0
 			for j := i + 1; ; j++ {
-				if j == fileDataLen || (*jb.fileData)[j] == ' ' {
+				if j == jb.end || (*jb.fileData)[j] == ' ' {
 					spaces++
 					if spaces == jb.arity {
 						start := i
-						if i != 0 {
+						if i != jb.start {
 							start++
 						}
 						key := strings.Split(string((*jb.fileData)[start:j]), " ")
 						sort.Strings(key)
 						m[strings.Join(key, "-")]++
+						//fmt.Printf("WORD [%s] START [%d] END [%d] I [%d]\n", strings.Join(key, "-"), start, j, i)
 						break
 					}
-					if j == fileDataLen {
+					if j == jb.end {
 						break loop
 					}
 				}
@@ -106,6 +107,7 @@ loop:
 	for _, o := range jb.outputs {
 		o <- d
 	}
+	//fmt.Println("chunk", m)
 	//send output data
 	fmt.Printf("counted file [%s] chunk range[%d-%d] bytes\n", jb.fileName, jb.start, jb.end)
 	c.poolChan <- struct{}{}
